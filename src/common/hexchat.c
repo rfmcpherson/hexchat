@@ -990,11 +990,25 @@ set_locale (void)
 #endif
 }
 
+static gboolean
+io_callback (GIOChannel * io, GIOCondition condition, gpointer data)
+{
+    gchar in;
+    g_io_channel_read_chars (io, &in, 1, NULL, NULL);
+    printf("we got: %c\n", in);
+    return TRUE;
+}
+
 int
 main (int argc, char *argv[])
 {
 	int i;
 	int ret;
+
+        // BEGIN NEW CODE
+        server *fake_serv;
+        GIOChannel *channel;
+        // END NEW CODE
 
 #ifdef WIN32
 	HRESULT coinit_result;
@@ -1094,6 +1108,16 @@ main (int argc, char *argv[])
 #endif /* !WIN32 */
 
 	xchat_init ();
+
+        // BEGIN NEW CODE
+        fake_serv = server_new();
+        //fake_serv->sok = STDIN_FILENO;
+        channel = g_io_channel_unix_new(STDIN_FILENO);
+        //g_io_add_watch(channel, G_IO_IN, (GIOFunc)server_read, fake_serv);
+        g_io_add_watch(channel, G_IO_IN, (GIOFunc)io_callback, fake_serv);
+        g_io_channel_unref(channel);
+
+        // END NEW CODE
 
 	fe_main ();
 

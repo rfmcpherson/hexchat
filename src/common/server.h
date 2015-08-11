@@ -36,6 +36,8 @@ char *server_get_network (server *serv, gboolean fallback);
 void server_set_name (server *serv, char *name);
 void server_free (server *serv);
 
+gboolean server_read (GIOChannel *source, GIOCondition condition, server *serv);
+
 void server_away_save_message (server *serv, char *nick, char *msg);
 struct away_msg *server_away_find_message (server *serv, char *nick);
 

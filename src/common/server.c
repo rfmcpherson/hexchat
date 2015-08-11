@@ -270,7 +270,7 @@ server_inline (server *serv, char *line, gssize len)
 
 /* read data from socket */
 
-static gboolean
+gboolean
 server_read (GIOChannel *source, GIOCondition condition, server *serv)
 {
 	int sok = serv->sok;
@@ -281,9 +281,17 @@ server_read (GIOChannel *source, GIOCondition condition, server *serv)
 	{
 #ifdef USE_OPENSSL
 		if (!serv->ssl)
+                {
 #endif
 			len = recv (sok, lbuf, sizeof (lbuf) - 2, 0);
+                        /*
+                        if(len<0)
+                            printf("server_read\nlen: %d\n\n\n", len);
+                        else
+                            printf("server_read\nlen: %d\nlbuf: %s\n\n\n", len, lbuf);
+                        */
 #ifdef USE_OPENSSL
+                }
 		else
 			len = _SSL_recv (serv->ssl, lbuf, sizeof (lbuf) - 2);
 #endif
