@@ -558,10 +558,11 @@ fe_main (void)
 #ifdef G_OS_WIN32
 	keyboard_input = g_io_channel_win32_new_fd(STDIN_FILENO);
 #else
-	keyboard_input = g_io_channel_unix_new(STDIN_FILENO);
+        // RFM: nope
+	//keyboard_input = g_io_channel_unix_new(STDIN_FILENO);
 #endif
 
-	g_io_add_watch(keyboard_input, G_IO_IN, handle_line, NULL);
+	//g_io_add_watch(keyboard_input, G_IO_IN, handle_line, NULL);
 
 	g_main_loop_run(main_loop);
 

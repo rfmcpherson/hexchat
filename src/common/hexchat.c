@@ -778,6 +778,7 @@ xchat_init (void)
 	}
 #endif	/* !WIN32 */
 
+        // RFM: Looks like we use this.
 #ifdef USE_SIGACTION
 	struct sigaction act;
 
@@ -804,8 +805,13 @@ xchat_init (void)
 #endif
 #endif
 
+        // RFM: Messages the user sees 
 	load_text_events ();
+
+        // RFM: Sound files?
 	sound_load ();
+
+        // RFM: IRC notifies and ignores???
 	notify_load ();
 	ignore_load ();
 
@@ -1008,6 +1014,7 @@ main (int argc, char *argv[])
         // BEGIN NEW CODE
         server *fake_serv;
         GIOChannel *channel;
+        session *sess;
         // END NEW CODE
 
 #ifdef WIN32
@@ -1046,6 +1053,7 @@ main (int argc, char *argv[])
 	}
 
 #if ! GLIB_CHECK_VERSION (2, 36, 0)
+        // RFM: Don't think we hit this
 	g_type_init ();
 #endif
 
@@ -1062,8 +1070,10 @@ main (int argc, char *argv[])
 	}
 
 	/* we MUST do this after load_config () AND before fe_init (thus gtk_init) otherwise it will fail */
-	set_locale ();
+	// RFM: Does nothing on *NIX
+        set_locale ();
 
+        // RFM: Parses some command line crap. Not important
 	ret = fe_args (argc, argv);
 	if (ret != -1)
 		return ret;
@@ -1073,6 +1083,7 @@ main (int argc, char *argv[])
 #endif
 
 #ifdef USE_LIBPROXY
+        // RFM: Not using
 	libproxy_factory = px_proxy_factory_new();
 #endif
 
@@ -1084,8 +1095,10 @@ main (int argc, char *argv[])
 	}
 #endif
 
+        // RFM: Inits some fe-text stuff
 	fe_init ();
 
+        // RFM: Pretty sure this just allows us to save chats...
 	/* This is done here because cfgfiles.c is too early in
 	* the startup process to use gtk functions. */
 	if (g_access (get_xdir (), W_OK) != 0)
@@ -1098,6 +1111,7 @@ main (int argc, char *argv[])
 		fe_message (buf, FE_MSG_ERROR);
 	}
 
+        // RFM: Checks if root on *NIX 
 #ifndef WIN32
 #ifndef __EMX__
 	/* OS/2 uses UID 0 all the time */
@@ -1107,16 +1121,20 @@ main (int argc, char *argv[])
 #endif
 #endif /* !WIN32 */
 
+        // RFM: Loads a bunch of configure options
 	xchat_init ();
 
         // BEGIN NEW CODE
         fake_serv = server_new();
-        //fake_serv->sok = STDIN_FILENO;
+        fake_serv->sok = STDIN_FILENO;
+        //        fake_serv->pos = 0; //??? 
+        sess = session_new(fake_serv, "fake_sess", SESS_CHANNEL, 0);
+        fake_serv->server_session = sess;
+        fake_serv->front_session = sess;
         channel = g_io_channel_unix_new(STDIN_FILENO);
-        //g_io_add_watch(channel, G_IO_IN, (GIOFunc)server_read, fake_serv);
-        g_io_add_watch(channel, G_IO_IN, (GIOFunc)io_callback, fake_serv);
+        g_io_add_watch(channel, G_IO_IN, (GIOFunc)server_read, fake_serv);
+        //g_io_add_watch(channel, G_IO_IN, (GIOFunc)io_callback, fake_serv);
         g_io_channel_unref(channel);
-
         // END NEW CODE
 
 	fe_main ();

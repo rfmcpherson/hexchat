@@ -1530,10 +1530,11 @@ irc_inline (server *serv, char *buf, int len)
 	} else
 	{
 		word[0] = type = word[1];
-
 		if (plugin_emit_server (sess, type, word, word_eol,
 								tags_data.timestamp))
+                {
 			goto xit;
+                }
 	}
 
 	if (buf[0] != ':')

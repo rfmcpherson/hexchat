@@ -258,6 +258,7 @@ static void
 server_inline (server *serv, char *line, gssize len)
 {
 	gsize len_utf8;
+
 	line = text_convert_invalid (line, len, serv->read_converter, unicode_fallback_string, &len_utf8);
 
 	fe_add_rawlog (serv, line, len_utf8, FALSE);
@@ -283,7 +284,15 @@ server_read (GIOChannel *source, GIOCondition condition, server *serv)
 		if (!serv->ssl)
                 {
 #endif
-			len = recv (sok, lbuf, sizeof (lbuf) - 2, 0);
+                        if (sok == STDIN_FILENO)
+                        {
+                            len = read(0, lbuf, sizeof(lbuf));
+                        }
+                        else
+                        {
+                            len = recv (sok, lbuf, sizeof (lbuf) - 2, 0);
+                        }    
+
                         /*
                         if(len<0)
                             printf("server_read\nlen: %d\n\n\n", len);
@@ -301,7 +310,10 @@ server_read (GIOChannel *source, GIOCondition condition, server *serv)
 			if (len < 0)
 			{
 				if (would_block ())
-					return TRUE;
+                                {
+                                       fe_exit();
+                                       return TRUE;
+                                }
 				error = sock_error ();
 			}
 			if (!serv->end_of_motd)
@@ -319,6 +331,7 @@ server_read (GIOChannel *source, GIOCondition condition, server *serv)
 				else
 					server_disconnect (serv->server_session, FALSE, error);
 			}
+                        fe_exit();
 			return TRUE;
 		}
 
@@ -335,7 +348,7 @@ server_read (GIOChannel *source, GIOCondition condition, server *serv)
 
 			case '\n':
 				serv->linebuf[serv->pos] = 0;
-				server_inline (serv, serv->linebuf, serv->pos);
+                                server_inline (serv, serv->linebuf, serv->pos);
 				serv->pos = 0;
 				break;
 
@@ -343,7 +356,7 @@ server_read (GIOChannel *source, GIOCondition condition, server *serv)
 				serv->linebuf[serv->pos] = lbuf[i];
 				if (serv->pos >= (sizeof (serv->linebuf) - 1))
 					fprintf (stderr,
-								"*** HEXCHAT WARNING: Buffer overflow - shit server!\n");
+                                                 "*** HEXCHAT WARNING: Buffer overflow - shit server!\n");
 				else
 					serv->pos++;
 			}
